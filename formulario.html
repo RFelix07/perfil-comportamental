@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Descubra seu Perfil Comportamental</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .pergunta {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    .alternativa {
+      margin-left: 20px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #resultado {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f7f7f7;
+      border-radius: 8px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Descubra seu Perfil Comportamental</h1>
+
+  <form id="formulario">
+    <!-- Campo de Nome -->
+    <label for="nome">Nome completo:
+      <input type="text" name="nome" id="nome" required />
+    </label>
+
+    <!-- Pergunta 1 -->
+    <div class="pergunta">
+      <p><strong>1. Como você prefere resolver um problema?</strong></p>
+      <label><input type="radio" name="q1" value="analitico" required /> Analisar os dados e planejar</label><br>
+      <label><input type="radio" name="q1" value="pratico" /> Agir rapidamente com o que tem</label><br>
+      <label><input type="radio" name="q1" value="criativo" /> Buscar soluções inovadoras</label><br>
+      <label><input type="radio" name="q1" value="social" /> Pedir ajuda e discutir com outros</label>
+    </div>
+
+    <!-- Pergunta 2 -->
+    <div class="pergunta">
+      <p><strong>2. Qual ambiente você se sente mais à vontade?</strong></p>
+      <label><input type="radio" name="q2" value="analitico" required /> Um escritório organizado com planilhas</label><br>
+      <label><input type="radio" name="q2" value="pratico" /> Em campo, agindo na prática</label><br>
+      <label><input type="radio" name="q2" value="criativo" /> Num espaço criativo com liberdade</label><br>
+      <label><input type="radio" name="q2" value="social" /> Num grupo colaborativo</label>
+    </div>
+
+    <!-- Botão Enviar -->
+    <button type="submit">Enviar Respostas</button>
+  </form>
+
+  <div id="resultado"></div>
+
+  <script>
+    const form = document.getElementById('formulario');
+    const resultadoDiv = document.getElementById('resultado');
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Coleta nome
+      const nomeInput = document.querySelector('input[name="nome"]');
+      const nome = nomeInput.value.trim();
+      if (!nome) {
+        alert("Por favor, preencha seu nome.");
+        return;
+      }
+
+      const perfilCount = {
+        analitico: 0,
+        pratico: 0,
+        criativo: 0,
+        social: 0
+      };
+
+      // Conta respostas (até q2)
+      for (let i = 1; i <= 2; i++) {
+        const resposta = document.querySelector(`input[name="q${i}"]:checked`);
+        if (!resposta) {
+          alert("Responda todas as perguntas antes de enviar.");
+          return;
+        }
+        perfilCount[resposta.value]++;
+      }
+
+      // Determina perfil dominante
+      let perfilFinal = 'analitico';
+      Object.keys(perfilCount).forEach(perfil => {
+        if (perfilCount[perfil] > perfilCount[perfilFinal]) {
+          perfilFinal = perfil;
+        }
+      });
+
+      // Tradução dos perfis
+      const perfis = {
+        analitico: "Analítico",
+        pratico: "Prático",
+        criativo: "Criativo",
+        social: "Social"
+      };
+
+      // Envia dados para Google Sheets
+      fetch('https://script.google.com/macros/s/AKfycbxuCcSiEn4uiL7S8VLIkZJxH-oqU1XdldwdEJvFmWBNFG7yBpJfYYai2ox5_YwswQD7Qw/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ nome, perfil: perfis[perfilFinal] })
+      })
+      .then(response => response.text())
+      .then(text => {
+        console.log("Dados salvos:", text);
+
+        resultadoDiv.innerHTML = `
+          <h2>Resultado:</h2>
+          <p><strong>${nome}</strong>, seu perfil comportamental é:</p>
+          <h3 style="color:#2196F3;">${perfis[perfilFinal]}</h3>
+          <p>Obrigado por participar! Sua resposta foi registrada.</p>
+          <p><a href="">Voltar e responder novamente</a></p>
+        `;
+      })
+      .catch(error => {
+        console.error('Erro ao salvar:', error);
+        resultadoDiv.innerHTML = `
+          <h2>Ops!</h2>
+          <p>Ocorreu um erro ao salvar seus dados. Tente novamente mais tarde.</p>
+        `;
+      });
+    });
+  </script>
+
+</body>
+</html>
